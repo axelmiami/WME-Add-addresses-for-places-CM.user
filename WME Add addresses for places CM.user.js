@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         WME Add addresses for places CM
-// @version      0.25.22 ("Null" filter for POI)
+// @version      0.25.23
 // @description  Добавление альтернативных названий (адресов)
-// @author       ixxvivxxi, Vinkoy
+// @author       ixxvivxxi, Vinkoy, Axel_Miami
 // @include      https://*waze.com/*editor*
 // @exclude      https://*waze.com/*user/editor*
 // @grant        none
@@ -298,11 +298,11 @@ function startAltAddress()
                 address = W.selectionManager.getSelectedFeatures()[0].model.getAddress();
                 var title = "Update addresses";
 
-                if(address.attributes.country.id == 37 || address.attributes.country.id == 186)
+                if(address.country.id == 37 || address.country.id == 186)
                 {
                     title = "Обновить адреса";
                 }
-                selectStreetName = address.attributes.street.name;
+                selectStreetName = address.street.name;
                 if(selectStreetName !== null)
                     $('.more-actions').append('<button id="addPOIs" class="action-button btn btn-default">' + title + '</button>');
                 addClass();
@@ -496,9 +496,9 @@ function startAltAddress()
                             if(WME_ADR_debug) console.log("WME-ADR: addPOIs(): null street", W.model.houseNumbers.objects[key].getSegment().getAddress());
                             continue;
                         }
-                        if(W.model.houseNumbers.objects[key].getSegment().getAddress().attributes.street.name != address.attributes.street.name)
+                        if(W.model.houseNumbers.objects[key].getSegment().getAddress().attributes.street.name != address.street.name)
                         {
-                            if(WME_ADR_debug) console.log("WME-ADR: addPOIs(): other streetName ("+address.attributes.street.name+")", W.model.houseNumbers.objects[key].getSegment().getAddress().attributes.street.name);
+                            if(WME_ADR_debug) console.log("WME-ADR: addPOIs(): other streetName ("+address.street.name+")", W.model.houseNumbers.objects[key].getSegment().getAddress().attributes.street.name);
                             continue;
                         }
                         if(!W.map.getExtent().intersectsBounds(W.model.houseNumbers.objects[key].numbers[i].geometry.getBounds()))
@@ -521,10 +521,10 @@ function startAltAddress()
                                 continue;
                             }
 
-                            if(WME_ADR_debug) console.log("WME-ADR: addPOIs(): NH:  "+address.attributes.city.attributes.name+", "+address.attributes.street.name+", "+number,address);
+                            if(WME_ADR_debug) console.log("WME-ADR: addPOIs(): NH:  "+address.city.attributes.name+", "+address.street.name+", "+number,address);
                             if(WME_ADR_debug) console.log("WME-ADR: addPOIs(): POI: "+venueAddress.city.attributes.name+", "+venueAddress.street.name+", "+venueAddress.houseNumber+", RH="+venue.isResidential(),venueAddress);
-                            if(address.attributes.city.attributes.name.indexOf(venueAddress.city.attributes.name) != -1
-                                && address.attributes.street.name == venueAddress.street.name
+                            if(address.city.attributes.name.indexOf(venueAddress.city.attributes.name) != -1
+                                && address.street.name == venueAddress.street.name
                                 && (venueAddress.houseNumber !== null && number.toLowerCase() == venueAddress.houseNumber.toLowerCase())
                                 && (venue.isResidential()
                                 || (!venue.isResidential() && venue.attributes.name.toLowerCase() == number.toLowerCase()))
@@ -591,7 +591,7 @@ function startAltAddress()
                                 if(venue.geometry.intersects(W.model.houseNumbers.objects[key].numbers[i].geometry))
                                 {
                                     if(WME_ADR_debug) console.log("WME-ADR: addPOIs(): HN ("+number+") in POI area", W.model.houseNumbers.objects[key].numbers[i].geometry, venue.geometry);
-                                    var state = updateLandmark(venue, address.attributes.city.attributes.name, address.attributes.street.name, number);
+                                    var state = updateLandmark(venue, address.city.attributes.name, address.street.name, number);
                                     hasPOI = (hasPOI) ? hasPOI : state[0];
                                     hasRH = (hasRH) ? hasRH : state[1];
                                 }
@@ -609,9 +609,9 @@ function startAltAddress()
                                 {
                                     x: W.model.houseNumbers.objects[key].numbers[i].geometry.x,
                                     y: W.model.houseNumbers.objects[key].numbers[i].geometry.y,
-                                    streetName: address.attributes.street.name,
+                                    streetName: address.street.name,
                                     houseNumber: number,
-                                    cityName: address.attributes.city.attributes.name
+                                    cityName: address.city.attributes.name
                                 }, false);
                         }
                         if(!hasRH && document.getElementById('_createRH').checked)
@@ -620,9 +620,9 @@ function startAltAddress()
                                 {
                                     x: W.model.houseNumbers.objects[key].numbers[i].geometry.x,
                                     y: W.model.houseNumbers.objects[key].numbers[i].geometry.y,
-                                    streetName: address.attributes.street.name,
+                                    streetName: address.street.name,
                                     houseNumber: number,
-                                    cityName: address.attributes.city.attributes.name
+                                    cityName: address.city.attributes.name
                                 }, true);
                         }
 
@@ -648,20 +648,21 @@ function startAltAddress()
         {
             var haveChanges = false;
             hasPOI = true;
-            if((venue.getAddress().attributes.street.name != streetName && streetName.indexOf(" ") == -1) || address.attributes.city.attributes.name.indexOf(cityName) != -1)
+
+            if((venue.getAddress().attributes.street.name != streetName && streetName.indexOf(" ") == -1) || address.city.attributes.name.indexOf(cityName) != -1)
             {
                 var newAddressAtts = {
                     streetName: streetName,
                     emptyStreet: false,
-                    cityName: (address.attributes.city.attributes.name.indexOf(cityName) != -1) ? address.attributes.city.attributes.name : cityName,
+                    cityName: (address.city.attributes.name.indexOf(cityName) != -1) ? address.city.attributes.name : cityName,
                     emptyCity: false,
                     stateID: address.state.id,
-                    countryID: address.attributes.country.id
+                    countryID: address.country.id
                 };
                 W.model.actionManager.add(new wazeActionUpdateFeatureAddress(venue, newAddressAtts,{streetIDField: 'streetID'}));
                 haveChanges = true;
 
-                if(WME_ADR_debug && address.attributes.city.attributes.name !== newAddressAtts.cityName) console.log("WME-ADR: updateLandmark(): City '"+address.attributes.city.attributes.name+"' -> '"+cityName+"'");
+                if(WME_ADR_debug && address.city.attributes.name !== newAddressAtts.cityName) console.log("WME-ADR: updateLandmark(): City '"+address.city.attributes.name+"' -> '"+cityName+"'");
                 if(WME_ADR_debug && venue.getAddress().attributes.street.name != streetName) console.log("WME-ADR: updateLandmark(): City '"+venue.getAddress().attributes.street.name+"' -> '"+streetName+"'");
             }
 
@@ -704,7 +705,7 @@ function startAltAddress()
                     haveChanges = true;
                 }
 
-                if((address.attributes.country.id == 37 || address.attributes.country.id == 186) && number.indexOf("/") != -1)
+                if((address.country.id == 37 || address.country.id == 186) && number.indexOf("/") != -1)
                 {
                     if(WME_ADR_debug) console.log("WME-ADR: updateLandmark(): has '/' ("+number+")");
                     hasAliasAddress = false;
