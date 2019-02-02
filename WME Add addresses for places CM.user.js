@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         WME Add addresses for places CM
-// @version      0.25.23
+// @version      0.25.24
 // @description  Добавление альтернативных названий (адресов)
 // @author       ixxvivxxi, Vinkoy, Axel_Miami
 // @include      https://*waze.com/*editor*
@@ -673,7 +673,7 @@ function startAltAddress()
                 newAtts.houseNumber = number;
                 haveChanges = true;
             }
-            if(/*venue.attributes.name.indexOf(number) !== 0 ||*/ venue.attributes.name === "")
+            if(/*venue.attributes.name.indexOf(number) !== 0 ||*/ venue.attributes.name === "" || venue.attributes.name.toUpperCase () == number)
             {
                 if(WME_ADR_debug) console.log("WME-ADR: updateLandmark(): Name '"+venue.attributes.name+"' -> '"+number+"'");
                 newAtts.name = number;
