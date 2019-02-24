@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         WME Add addresses for places CM
-// @version      0.25.24
+// @version      0.25.25
 // @description  Добавление альтернативных названий (адресов)
 // @author       ixxvivxxi, Vinkoy, Axel_Miami
 // @include      https://*waze.com/*editor*
@@ -413,6 +413,7 @@ function startAltAddress()
         if(WME_ADR_debug) console.log("WME-ADR: --- createPOI(): isRH="+isRH, poiobject);
         var poi = new wazefeatureVectorLandmark();
         var geometry = new OpenLayers.Geometry.Point();
+        var emptyStreetStatus = false;
 
         geometry.x = poiobject.x - 1 + (isRH ? 2 : 0);
         geometry.y = poiobject.y;
@@ -441,6 +442,11 @@ function startAltAddress()
             return;
         }
 
+        if (poiobject.streetName == 'Null' || poiobject.streetName == 'NULL' || poiobject.streetName == '') {
+            poiobject.streetName = '';
+            emptyStreetStatus = true;
+        }
+
         W.model.actionManager.add(new wazeActionAddLandmark(poi));
         var poiAddress = poi.getAddress().attributes;
 
@@ -452,7 +458,7 @@ function startAltAddress()
 
         var newAddressAtts = {
             streetName: poiobject.streetName,
-            emptyStreet: false,
+            emptyStreet: emptyStreetStatus,
             cityName: (poiAddress.city.attributes.name.indexOf(poiobject.cityName) != -1) ? poiAddress.city.attributes.name : poiobject.cityName,
             emptyCity: false,
             stateID: poiAddress.state.id,
@@ -637,6 +643,7 @@ function startAltAddress()
         if(WME_ADR_debug) console.log("WME-ADR: --- updateLandmark("+cityName+", "+streetName+", "+number+")", venue);
         var hasPOI = false;
         var hasRH = false;
+        var emptyStreetStatus = false;
 
         if(venue.getAddress().attributes.street.name != streetName
             || venue.getAddress().attributes.houseNumber != number
@@ -649,11 +656,16 @@ function startAltAddress()
             var haveChanges = false;
             hasPOI = true;
 
+            if (streetName == 'Null' || streetName == 'NULL' || streetName == '') {
+                streetName = '';
+                emptyStreetStatus = true;
+            }
+
             if((venue.getAddress().attributes.street.name != streetName && streetName.indexOf(" ") == -1) || address.city.attributes.name.indexOf(cityName) != -1)
             {
                 var newAddressAtts = {
                     streetName: streetName,
-                    emptyStreet: false,
+                    emptyStreet: emptyStreetStatus,
                     cityName: (address.city.attributes.name.indexOf(cityName) != -1) ? address.city.attributes.name : cityName,
                     emptyCity: false,
                     stateID: address.state.id,
@@ -906,7 +918,9 @@ function startAltAddress()
             if(ncaJSON.results[i].attributes.ELEMENTTYP == "0" || ncaJSON.results[i].attributes.ELEMENTTYP == "Null" || ncaJSON.results[i].attributes.ELEMENTTYP == "NULL") {
                 ncaJSON.results[i].attributes.ELEMENTTYP = '';
             }
-            var namestreet = ncaJSON.results[i].attributes.ELEMENTTYP + ' ' + ncaJSON.results[i].attributes.ELEMENTNAM;
+            var namestreet = '';
+            namestreet += (ncaJSON.results[i].attributes.ELEMENTTYP != '') ? ncaJSON.results[i].attributes.ELEMENTTYP + ' ' : '';
+            namestreet += ncaJSON.results[i].attributes.ELEMENTNAM;
             var cityName = ncaJSON.results[i].attributes.OBJ_NAME.replace("д. ", "")
                 .replace("аг. ", "")
                 .replace("г. ", "")
