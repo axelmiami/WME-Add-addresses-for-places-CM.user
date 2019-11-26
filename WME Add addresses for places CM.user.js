@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         WME Add addresses for places CM
-// @version      0.25.25
+// @version      0.26.0
 // @description  Добавление альтернативных названий (адресов)
 // @author       ixxvivxxi, Vinkoy, Axel_Miami
 // @include      https://*waze.com/*editor*
